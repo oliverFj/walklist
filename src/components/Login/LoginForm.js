@@ -7,6 +7,7 @@ const LoginForm = () => {
     password: '',
   });
 
+// Add this function to handle input changes
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setCredentials({
@@ -14,7 +15,8 @@ const LoginForm = () => {
       [name]: value,
     });
   };
-
+  
+  // Add this function to handle form submission
   const handleSubmit = (e) => {
     e.preventDefault();
     // Handle login logic here
