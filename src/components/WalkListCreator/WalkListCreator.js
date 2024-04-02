@@ -10,7 +10,7 @@ const WalkListCreator = ({ onStartRecording }) => {
         placeholder="Select a playlist"   
       />
       <RecordButton onClick={onStartRecording} />
-      <p className="text-center text-white">Start recording</p>
+     
     </div>
   );
 };

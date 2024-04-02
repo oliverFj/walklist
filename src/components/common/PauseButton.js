@@ -16,9 +16,9 @@ const ToggleButton = () => {
 
   return (
     <div className="flex flex-col items-center" style={{ width: '120px' }}> {/* Fixed width for the container */}
-      <button onClick={handleClick} className="w-20 h-20 p-0 border-none bg-transparent">
+      <button onClick={handleClick} className="w-12 h-12 p-0 border-none bg-transparent">
         {/* Image with fixed size */}
-        <img src={isPaused ? pauseImage : recordImage} alt="Button" className="w-20 h-20" /> {/* Fixed width and height for the image */}
+        <img src={isPaused ? pauseImage : recordImage} alt="Button" className="w-12 h-12" /> {/* Fixed width and height for the image */}
       </button>
       <p className="text-center text-white mt-2">{buttonText}</p> {/* Margin-top added to separate text from button */}
     </div>
