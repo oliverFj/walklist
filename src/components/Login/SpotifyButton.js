@@ -1,5 +1,5 @@
 import React from 'react';
-import spotifyLogo from '../Images/Spotify.png'; // Make sure this path is correct
+import spotifyLogo from '../Images/Spotify.png'; 
 
 const SpotifyButton = ({ onLogin }) => {
   return (

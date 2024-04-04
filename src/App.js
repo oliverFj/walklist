@@ -10,15 +10,16 @@ import SaveWalkList from './components/WalkListCreator/SaveWalkList';
 import WalkListDetails from './components/WalkListDetails/WalkListDetails';
 import WalkListPlaying from './components/WalkListDetails/WalkListPlaying';
 
-
+// Denne komponent er vores hovedkomponent
+// Den styrer hvilken del af applikationen der skal vises
 const App = () => {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [showTopBarMessage, setShowTopBarMessage] = useState(true);
-  const [topBarMessage, setTopBarMessage] = useState('Choose a walk-list'); // New state for managing top bar message
-  const [currentView, setCurrentView] = useState('default');
-  const [areMarkersVisible, setAreMarkersVisible] = useState(true); // New state for managing marker visibility
-  const [selectedSongs, setSelectedSongs] = useState([]); // New state for selected songs
-  const [selectedTitle, setSelectedTitle] = useState(''); // New state for selected title
+  const [isLoggedIn, setIsLoggedIn] = useState(false); // Denne state holder styr på om brugeren er logget ind
+  const [showTopBarMessage, setShowTopBarMessage] = useState(true); // Denne state holder styr på om topbar beskeden skal vises
+  const [topBarMessage, setTopBarMessage] = useState('Choose a walk-list'); // Denne state holder styr på topbar beskeden
+  const [currentView, setCurrentView] = useState('default'); // Denne state holder styr på hvilken del af applikationen der skal vises
+  const [areMarkersVisible, setAreMarkersVisible] = useState(true); // Denne state holder styr på om markørerne skal vises
+  const [selectedSongs, setSelectedSongs] = useState([]); // Denne state holder styr på sangene i den valgte walk-liste
+  const [selectedTitle, setSelectedTitle] = useState(''); // Denne state holder styr på titlen på den valgte walk-liste
 
   const handleLogin = () => {
     setIsLoggedIn(true);

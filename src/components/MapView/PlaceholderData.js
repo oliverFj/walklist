@@ -7,12 +7,12 @@ const markersData = [
       title: "My First Date <33",
       description: "Some description of the list...",
       songs: [
-        "Metallica - enter sandman", 
-        "Metallica - nothing else matters", 
-        "Metallica - master of puppets", 
-        "Metallica - one", 
-        "Metallica - fade to black", 
-        "Metallica - the unforgiven"], // Example songs
+                "Metallica - enter sandman", 
+                "Metallica - nothing else matters", 
+                "Metallica - master of puppets", 
+                "Metallica - one", 
+                "Metallica - fade to black", 
+                "Metallica - the unforgiven"], // Example songs
 
       trail: [[55.6857603764647, 12.573195962236225], [55.686070253193506, 12.573240381697852], [55.686148504504374, 12.573728995775769], [55.68612346410194, 12.57403993200717], [55.6863801274668, 12.574112113632317], [55.68657418889257, 12.5740843514688], [55.68681519933348, 12.573901121192774] ], // Example geolocation trail
     },
@@ -23,7 +23,6 @@ const markersData = [
       songs: ["Song 3", "Song 4"],
       trail: [[55.6864, 12.5748], [55.6865, 12.5749]],
     },
-    // Add more marker objects here
     {
         position: [55.68596341943917, 12.572184547362607],
         title: "Our kiss",
