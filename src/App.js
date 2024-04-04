@@ -8,14 +8,17 @@ import WalkListCreator from './components/WalkListCreator/WalkListCreator';
 import Recording from './components/WalkListCreator/Recording';
 import SaveWalkList from './components/WalkListCreator/SaveWalkList';
 import WalkListDetails from './components/WalkListDetails/WalkListDetails';
+import WalkListPlaying from './components/WalkListDetails/WalkListPlaying';
 
-// ...other imports
 
 const App = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [showTopBarMessage, setShowTopBarMessage] = useState(true);
   const [topBarMessage, setTopBarMessage] = useState('Choose a walk-list'); // New state for managing top bar message
   const [currentView, setCurrentView] = useState('default');
+  const [areMarkersVisible, setAreMarkersVisible] = useState(true); // New state for managing marker visibility
+  const [selectedSongs, setSelectedSongs] = useState([]); // New state for selected songs
+  const [selectedTitle, setSelectedTitle] = useState(''); // New state for selected title
 
   const handleLogin = () => {
     setIsLoggedIn(true);
@@ -44,24 +47,37 @@ const App = () => {
   const handleReturnToDefault = () => {
     setCurrentView('default');
     setTopBarMessage('Choose a walk-list'); // Reset the top bar message to default
+    setAreMarkersVisible(true); // Show markers again
   }
+
+  const handleMarkerSelect = (title, songs) => {
+    setSelectedTitle(title);
+    setSelectedSongs(songs);
+    setCurrentView('viewDetails');
+    setAreMarkersVisible(false); // Hide markers when viewing details
+  };
+
+  const handlePlayWalkList = () => {
+    setCurrentView('walkListPlaying');
+    setTopBarMessage('Playing walk-list'); // Optional: Update the top bar message accordingly
+  };
+
 
   // Add a new useEffect hook to listen for the 'Escape' key
   // This will reset the current view to default when the 'Escape' key is pressed
   useEffect(() => {
     const handleKeyDown = (event) => {
       if (event.key === 'Escape') {
-        // Reset to default state
         setCurrentView('default');
         setShowTopBarMessage(true);
         setTopBarMessage('Choose a walk-list'); // Reset the top bar message to default
+        setSelectedSongs([]); // Clear selected songs
+        setAreMarkersVisible(true); // Show markers again
       }
     };
 
-    // Add event listener
     window.addEventListener('keydown', handleKeyDown);
 
-    // Clean up event listener
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
@@ -75,11 +91,13 @@ const App = () => {
       case 'createWalkList':
         return <WalkListCreator onStartRecording={handleStartRecording} />;
       case 'viewDetails':
-        return <WalkListDetails />;
+        return <WalkListDetails title={selectedTitle} songs={selectedSongs} onPlayPress={handlePlayWalkList} />;
       case 'recording':
-        return <Recording onDoneRecording={handleSaveWalkList}/>;
+        return <Recording onDoneRecording={handleSaveWalkList} />;
       case 'saveWalkList':
-        return <SaveWalkList onSaved={handleReturnToDefault}/>;
+        return <SaveWalkList onSaved={handleReturnToDefault} />;
+      case 'walkListPlaying':
+        return <WalkListPlaying onDonePlaying={handleReturnToDefault} />;
       default:
         return <RoundedButton text="Create new walk-list" onClick={handleCreateWalkList} />;
     }
@@ -93,7 +111,11 @@ const App = () => {
         <>
           {showTopBarMessage && <TopBarMessage text={topBarMessage} />}
           <div className="flex-grow relative z-10">
-            <MapView />
+            <MapView
+              onMarkerSelect={handleMarkerSelect}
+              isVisible={areMarkersVisible}
+              isDefaultView={currentView === 'default'}
+            />
             {renderCurrentView()}
           </div>
         </>

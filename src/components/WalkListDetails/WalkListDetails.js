@@ -1,16 +1,20 @@
-// WalkListDetails.js
+//WalkListDetails.js
 import React from 'react';
+import PlayButton from '../common/PlayButton.js';
 
-const WalkListDetails = ({ songs }) => {
+const WalkListDetails = ({ title, songs = [], onPlayPress }) => {
   return (
-    <div className="walklist-description bg-gray-600 slide-in-bottom absolute bottom-0 left-0 right-0 z-50 flex flex-col justify-center items-center py-4" style={{ height: '200px' }}>
-      <ul>
+    <div className="walklist-description bg-gray-600 slide-in-bottom absolute bottom-0 left-0 right-0 z-50 flex flex-col justify-center items-center py-4" style={{ height: 'auto', padding: '20px' }}>
+      <h2 className="text-white text-xl mb-4">{title}</h2>
+      <div>
         {songs.map((song, index) => (
-          <li key={index} className="text-white">{song}</li>
+          <div key={index} className="text-white mb-2">{song}</div>
         ))}
-      </ul>
+      </div>
+      <PlayButton onClick={onPlayPress} />
     </div>
   );
 };
+
 
 export default WalkListDetails;

@@ -1,14 +1,6 @@
-// This program is a way to create trails with an accompanying playlist. Each playlist has a marker on the map
-// that, when clicked, displays the playlist's title and description. The button on the popup will display a
-// component that shows the playlist's songs and a play button. When the play button is clicked the songs will
-// play in order and instead of the markers a trail will be shown on the map with a new component to control play and pause.
-// I dont want to keep reloading the map so I will need a state to keep track of the markers and the path.
-// I need to make the components for the playlist and the controls.
-// How should I structure this to be as flexible as possible? In the future I would like a database with all
-// the information and data for each trail, like startposition, name and description, the playlist and the trail points.
+When the play button in walklistdetails is pressed I need the walklistplaying component to open instead.
 
-// app.js
-
+//app.js
 import React, { useState, useEffect } from 'react';
 import SpotifyButton from './components/Login/SpotifyButton';
 import MapView from './components/MapView/MapView';
@@ -18,14 +10,17 @@ import WalkListCreator from './components/WalkListCreator/WalkListCreator';
 import Recording from './components/WalkListCreator/Recording';
 import SaveWalkList from './components/WalkListCreator/SaveWalkList';
 import WalkListDetails from './components/WalkListDetails/WalkListDetails';
+import WalkListPlaying from './components/WalkListDetails/WalkListPlaying';
 
-// ...other imports
 
 const App = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [showTopBarMessage, setShowTopBarMessage] = useState(true);
   const [topBarMessage, setTopBarMessage] = useState('Choose a walk-list'); // New state for managing top bar message
   const [currentView, setCurrentView] = useState('default');
+  const [areMarkersVisible, setAreMarkersVisible] = useState(true); // New state for managing marker visibility
+  const [selectedSongs, setSelectedSongs] = useState([]); // New state for selected songs
+  const [selectedTitle, setSelectedTitle] = useState(''); // New state for selected title
 
   const handleLogin = () => {
     setIsLoggedIn(true);
@@ -56,22 +51,28 @@ const App = () => {
     setTopBarMessage('Choose a walk-list'); // Reset the top bar message to default
   }
 
+  const handleMarkerSelect = (title, songs) => {
+    setSelectedTitle(title);
+    setSelectedSongs(songs);
+    setCurrentView('viewDetails');
+    setAreMarkersVisible(false); // Hide markers when viewing details
+  };
+
   // Add a new useEffect hook to listen for the 'Escape' key
   // This will reset the current view to default when the 'Escape' key is pressed
   useEffect(() => {
     const handleKeyDown = (event) => {
       if (event.key === 'Escape') {
-        // Reset to default state
         setCurrentView('default');
         setShowTopBarMessage(true);
         setTopBarMessage('Choose a walk-list'); // Reset the top bar message to default
+        setSelectedSongs([]); // Clear selected songs
+        setAreMarkersVisible(true); // Show markers again
       }
     };
 
-    // Add event listener
     window.addEventListener('keydown', handleKeyDown);
 
-    // Clean up event listener
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
@@ -85,11 +86,12 @@ const App = () => {
       case 'createWalkList':
         return <WalkListCreator onStartRecording={handleStartRecording} />;
       case 'viewDetails':
-        return <WalkListDetails />;
+
+        return <WalkListDetails title={selectedTitle} songs={selectedSongs} />;
       case 'recording':
-        return <Recording onDoneRecording={handleSaveWalkList}/>;
+        return <Recording onDoneRecording={handleSaveWalkList} />;
       case 'saveWalkList':
-        return <SaveWalkList onSaved={handleReturnToDefault}/>;
+        return <SaveWalkList onSaved={handleReturnToDefault} />;
       default:
         return <RoundedButton text="Create new walk-list" onClick={handleCreateWalkList} />;
     }
@@ -103,7 +105,11 @@ const App = () => {
         <>
           {showTopBarMessage && <TopBarMessage text={topBarMessage} />}
           <div className="flex-grow relative z-10">
-            <MapView />
+            <MapView
+              onMarkerSelect={handleMarkerSelect}
+              isVisible={areMarkersVisible}
+              isDefaultView={currentView === 'default'}
+            />
             {renderCurrentView()}
           </div>
         </>
@@ -114,76 +120,45 @@ const App = () => {
 
 export default App;
 
-//MapView.js
+//WalkListPlaying.js
+import React from 'react';
+import StopButton from '../common/StopButton.js';
+import PauseButton from '../common/PauseButtonPlay.js';
 
-import React, { useState } from 'react';
-import { MapContainer, TileLayer } from 'react-leaflet';
-import 'leaflet/dist/leaflet.css';
-import CustomMarker from './CustomMarker';
-
-const MapView = () => {
-  const [markers, setMarkers] = useState([
-    { position: [55.6861, 12.5732], title: "My First Date <33", description: "Some description of the list..." },
-    { position: [55.68641927777803, 12.57480489592852], title: "My favorite songs", description: "My favorite songs" },
-    { position: [55.68596341943917, 12.572184547362607], title: "Our kiss", description: "This walklist is dedicated to our first kiss" },
-    { position: [55.68529715538475, 12.573172037771718], title: "Songs of romance", description: "A collection of romantic songs" },
-
-    // Add more markers here
-  ]);
-  const [showPath, setShowPath] = useState(false);
-
-  const togglePathVisibility = () => {
-    setShowPath(!showPath);
-    // Logic to dynamically hide markers or show the path
-  };
-
+const WalkListPlaying = ({onDonePlaying}) => {
   return (
-    <MapContainer center={[55.6861, 12.5732]} zoom={20} style={{ height: '100%', width: '100%' }}>
-      <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-      {markers.map((marker, index) => (
-        <CustomMarker
-          key={index}
-          position={marker.position}
-          title={marker.title}
-          description={marker.description}
-          onButtonClick={togglePathVisibility}
-        />
-      ))}
-      {/* Conditionally render path here based on `showPath` */}
-    </MapContainer>
+    <div className="walklist-creator bg-gray-600 absolute bottom-0 left-0 right-0 z-50 flex justify-center items-center py-4" style={{ height: '200px' }}>
+      <div className="flex flex-col items-center mx-2">
+        <PauseButton />     
+      </div>
+      <div className="flex flex-col items-center mx-2">
+        <StopButton onClick={onDonePlaying}/>      
+      </div>
+    </div>
   );
 };
 
-export default MapView;
+export default WalkListPlaying;
 
-//CustomMarker
-
+//WalkListDetails.js
 import React from 'react';
-import { Marker, Popup } from 'react-leaflet';
-import L from 'leaflet';
-import nodeImage from '../Images/MusicNode.png'; // Ensure this path is correct
+import PlayButton from '../common/PlayButton.js';
 
-const customIcon = new L.Icon({
-  iconUrl: nodeImage,
-  iconSize: [35, 35],
-  iconAnchor: [17, 35],
-  popupAnchor: [0, -35],
-});
-
-const CustomMarker = ({ position, title, description, onButtonClick }) => (
-  <Marker position={position} icon={customIcon}>
-    <Popup>
-      <div className="text-center text-gray-800">
-        <strong>{title}</strong> <br /> {description}. <br />
-        <button
-          className="mt-2 bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-full"
-          onClick={onButtonClick}
-        >
-          See walklist
-        </button>
+const WalkListDetails = ({ title, songs = [] }) => {
+  console.log(title, songs)
+  return (
+    <div className="walklist-description bg-gray-600 slide-in-bottom absolute bottom-0 left-0 right-0 z-50 flex flex-col justify-center items-center py-4" style={{ height: 'auto', padding: '20px' }}>
+      {/* Display walklist name */}
+      <h2 className="text-white text-xl mb-4">{title}</h2>
+      <div>
+        {songs.map((song, index) => (
+          // Wrap each song in its own div
+          <div key={index} className="text-white mb-2">{song}</div>
+        ))}
       </div>
-    </Popup>
-  </Marker>
-);
+      <PlayButton />
+    </div>
+  );
+};
 
-export default CustomMarker;
+export default WalkListDetails;
