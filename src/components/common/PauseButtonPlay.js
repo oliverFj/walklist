@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import pauseImage from '../Images/Pausebtn.png';
 import playImage from '../Images/PlayBtn.png';
 
-const ToggleButton = () => {
+const ToggleButton = ({buttonText1 = 'Pause recording', buttonText2 = 'Start recording'}) => {
   // State to toggle between images
   const [isPaused, setIsPaused] = useState(true);
 
@@ -12,7 +12,7 @@ const ToggleButton = () => {
   };
 
   // Define the button text based on state
-  const buttonText = isPaused ? "Pause recording" : "Start recording";
+  const buttonText = isPaused ? buttonText1 : buttonText2;
 
   return (
     <div className="flex flex-col items-center" style={{ width: '120px' }}> {/* Fixed width for the container */}
