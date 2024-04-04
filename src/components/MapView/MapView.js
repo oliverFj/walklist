@@ -1,24 +1,35 @@
 // MapView.js
-import React from 'react';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import React, { useState } from 'react';
+import { MapContainer, TileLayer } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
+import CustomMarker from './CustomMarker';
+import markersData from './PlaceholderData'; // Update the import path as necessary
 
 const MapView = () => {
-  const position = [55.6861, 12.5701]; // Coordinates for the Botanical Garden in Copenhagen
+  const [markers, setMarkers] = useState(markersData);
+  const [showPath, setShowPath] = useState(false);
+
+  const togglePathVisibility = () => {
+    setShowPath(!showPath);
+    // Logic to dynamically hide markers or show the path
+  };
 
   return (
-    <MapContainer center={position} zoom={20} style={{ height: '100%', width: '100%' }}>
-      <TileLayer
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-      />
-      <Marker position={position}>
-        <Popup>
-          Botanical Garden <br /> Copenhagen.
-        </Popup>
-      </Marker>
+    <MapContainer center={[55.6861, 12.5732]} zoom={20} style={{ height: '100%', width: '100%' }}>
+      <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+      {markers.map((marker, index) => (
+        <CustomMarker
+          key={index}
+          position={marker.position}
+          title={marker.title}
+          description={marker.description}
+          onButtonClick={togglePathVisibility}
+        />
+      ))}
+      {/* Conditionally render path here based on `showPath` */}
     </MapContainer>
   );
 };
 
 export default MapView;
+
