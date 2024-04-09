@@ -1,4 +1,114 @@
-When the play button in walklistdetails is pressed I need the walklistplaying component to open instead.
+I need the pause button in walklistplaying.js to play and pause the trail animation in mapview.js
+
+//WalkListPlaying.js
+import React from 'react';
+import StopButton from '../common/StopButton.js';
+import PauseButton from '../common/PauseButtonPlay.js';
+
+const WalkListPlaying = ({ onDonePlaying }) => {
+  return (
+    <div className="walklist-creator bg-gray-600 absolute bottom-0 left-0 right-0 z-50 flex justify-center items-center py-4" style={{ height: '200px' }}>
+      <div className="flex flex-col items-center mx-2">
+        <PauseButton buttonText1='Pause Walk' buttonText2='Resume Walk'/>
+      </div>
+      <div className="flex flex-col items-center mx-2">
+        <StopButton onClick={onDonePlaying} buttonText="End Walk" />      
+      </div>
+    </div>
+  );
+};
+
+export default WalkListPlaying;
+
+
+//MapView.js
+import React, { useState, useEffect } from 'react';
+import { MapContainer, TileLayer, Polyline, useMap } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import CustomMarker from './CustomMarker';
+import markersData from './PlaceholderData';
+
+// Component to update map center and handle trail animation
+const MapAnimator = ({ center, trail, isWalkListPlaying }) => {
+  const map = useMap();
+
+  useEffect(() => {
+    if (center) {
+      map.flyTo(center, map.getZoom());
+    }
+    if (isWalkListPlaying && trail && trail.length > 0) {
+      let index = 0;
+      const intervalId = setInterval(() => {
+        if (index < trail.length) {
+          map.flyTo(trail[index], map.getZoom(), {
+            animate: true,
+            duration: 2
+          });
+          index++;
+        } else {
+          clearInterval(intervalId);
+        }
+      }, 2000);
+
+      return () => clearInterval(intervalId);
+    }
+  }, [center, trail, map, isWalkListPlaying]);
+
+  return null;
+};
+
+const MapView = ({ isVisible, onMarkerSelect, isDefaultView, isWalkListPlaying, mapCenterPoint }) => {
+  const [markers, setMarkers] = useState(markersData);
+  const [visibleTrails, setVisibleTrails] = useState({});
+  const [selectedTrail, setSelectedTrail] = useState([]);
+
+  useEffect(() => {
+    if (isDefaultView) {
+      setVisibleTrails({});
+      setSelectedTrail([]); // Reset trail when returning to default view
+    }
+  }, [isDefaultView]);
+
+  const handleMarkerClick = (title, songs, trail) => {
+    onMarkerSelect(title, songs, trail);
+    toggleTrailVisibility(title);
+    setSelectedTrail(trail); // Update selected trail for animation
+  };
+
+  const toggleTrailVisibility = (title) => {
+    setVisibleTrails(prev => ({ ...prev, [title]: !prev[title] }));
+  };
+
+  return (
+    <MapContainer center={[55.6861, 12.5732]} zoom={20} style={{ height: '100%', width: '100%' }}>
+      <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+      <MapAnimator
+        center={mapCenterPoint}
+        trail={selectedTrail}
+        isWalkListPlaying={isWalkListPlaying}
+      />
+      {isVisible && markers.map((marker, index) => (
+        <CustomMarker
+          key={index}
+          position={marker.position}
+          title={marker.title}
+          description={marker.description}
+          songs={marker.songs}
+          onButtonClick={() => handleMarkerClick(marker.title, marker.songs, marker.trail)}
+        />
+      ))}
+      {Object.entries(visibleTrails).map(([title, isVisible], index) => {
+        if (!isVisible) return null;
+        const marker = markers.find(marker => marker.title === title);
+        if (!marker || !marker.trail || marker.trail.length <= 1) return null;
+        return <Polyline key={index} positions={marker.trail} color="red" />;
+      })}
+    </MapContainer>
+  );
+};
+
+export default MapView;
+
 
 //app.js
 import React, { useState, useEffect } from 'react';
@@ -13,53 +123,73 @@ import WalkListDetails from './components/WalkListDetails/WalkListDetails';
 import WalkListPlaying from './components/WalkListDetails/WalkListPlaying';
 
 
+// Denne komponent er vores hovedkomponent
+// Den styrer hvilken del af applikationen der skal vises
 const App = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [showTopBarMessage, setShowTopBarMessage] = useState(true);
-  const [topBarMessage, setTopBarMessage] = useState('Choose a walk-list'); // New state for managing top bar message
+  const [topBarMessage, setTopBarMessage] = useState('Choose a walk-list');
   const [currentView, setCurrentView] = useState('default');
-  const [areMarkersVisible, setAreMarkersVisible] = useState(true); // New state for managing marker visibility
-  const [selectedSongs, setSelectedSongs] = useState([]); // New state for selected songs
-  const [selectedTitle, setSelectedTitle] = useState(''); // New state for selected title
+  const [areMarkersVisible, setAreMarkersVisible] = useState(true);
+  const [selectedSongs, setSelectedSongs] = useState([]);
+  const [selectedTitle, setSelectedTitle] = useState('');
+  const [isWalkListPlaying, setIsWalkListPlaying] = useState(false);
+  const [mapCenterPoint, setMapCenterPoint] = useState(null);
 
+
+  // Denne funktion håndtere login
   const handleLogin = () => {
     setIsLoggedIn(true);
   };
-
+  // Denne funktion håndtere oprettelse af walk-liste 
   const handleCreateWalkList = () => {
     setCurrentView('createWalkList');
-    setTopBarMessage('New walk-list'); // Update the top bar message accordingly
+    setTopBarMessage('New walk-list'); // Her opdateres topbar beskeden
   };
 
   const handleViewDetails = () => {
     setCurrentView('viewDetails');
-    setTopBarMessage('Viewing walk-list details'); // Update the top bar message accordingly
+    setTopBarMessage('Viewing walk-list details');
   };
 
   const handleStartRecording = () => {
-    setCurrentView('recording'); // Add this new case
-    setTopBarMessage('All of me | John Legend'); // Optional: Update the top bar message accordingly
+    setCurrentView('recording');
+    setTopBarMessage('All of me | John Legend');
   };
 
   const handleSaveWalkList = () => {
     setCurrentView('saveWalkList');
-    setTopBarMessage('Save walk-list'); // Update the top bar message accordingly
+    setTopBarMessage('Save walk-list');
   }
-
+  // Denne funktion sender os tilbage til default view
   const handleReturnToDefault = () => {
     setCurrentView('default');
-    setTopBarMessage('Choose a walk-list'); // Reset the top bar message to default
-  }
+    setTopBarMessage('Choose a walk-list');
+    setAreMarkersVisible(true);
+    setIsWalkListPlaying(false); // Set back to false when returning to default
+  };
 
-  const handleMarkerSelect = (title, songs) => {
+  // Denne funktion håndtere valg af walk-liste
+  // Den tager titlen og sangene fra walk-listen
+  const handleMarkerSelect = (title, songs, trail) => {
+    // Assuming trail is now passed or accessed here, and it's an array of coordinates
+    if (trail && trail.length > 0) {
+      setMapCenterPoint(trail[0]);
+    }
     setSelectedTitle(title);
     setSelectedSongs(songs);
     setCurrentView('viewDetails');
-    setAreMarkersVisible(false); // Hide markers when viewing details
+    setAreMarkersVisible(false); // Gem markørerne når en walk-liste er valgt
   };
 
-  // Add a new useEffect hook to listen for the 'Escape' key
-  // This will reset the current view to default when the 'Escape' key is pressed
+  const handlePlayWalkList = () => {
+    setCurrentView('walkListPlaying');
+    setTopBarMessage('Playing walk-list');
+    setIsWalkListPlaying(true); // Set to true when walk list starts playing
+  };
+
+
+  // Denne useEffect bruger escape key press og sender os tilbage til default view
   useEffect(() => {
     const handleKeyDown = (event) => {
       if (event.key === 'Escape') {
@@ -68,6 +198,7 @@ const App = () => {
         setTopBarMessage('Choose a walk-list'); // Reset the top bar message to default
         setSelectedSongs([]); // Clear selected songs
         setAreMarkersVisible(true); // Show markers again
+        setIsWalkListPlaying(false); // Set back to false when returning to default
       }
     };
 
@@ -79,19 +210,19 @@ const App = () => {
   }, []);
 
 
-  // Update the renderCurrentView function to include the new view
-  // This function will render the appropriate view based on the current view state
+  // Denne funktion styrer hvilken del af applikationen der skal vises
   const renderCurrentView = () => {
     switch (currentView) {
       case 'createWalkList':
         return <WalkListCreator onStartRecording={handleStartRecording} />;
       case 'viewDetails':
-
-        return <WalkListDetails title={selectedTitle} songs={selectedSongs} />;
+        return <WalkListDetails title={selectedTitle} songs={selectedSongs} onPlayPress={handlePlayWalkList} />;
       case 'recording':
         return <Recording onDoneRecording={handleSaveWalkList} />;
       case 'saveWalkList':
         return <SaveWalkList onSaved={handleReturnToDefault} />;
+      case 'walkListPlaying':
+        return <WalkListPlaying onDonePlaying={handleReturnToDefault} />;
       default:
         return <RoundedButton text="Create new walk-list" onClick={handleCreateWalkList} />;
     }
@@ -100,6 +231,9 @@ const App = () => {
   return (
     <div className="app flex flex-col h-screen overflow-hidden">
       {!isLoggedIn ? (
+        // Hvis brugeren ikke er logget ind vises login knappen
+        // Når brugeren er logget ind vises kortet og walk-listen
+        // MapView er en komponent der tager isVisible, onMarkerSelect og isDefaultView som props
         <SpotifyButton onLogin={handleLogin} />
       ) : (
         <>
@@ -109,6 +243,8 @@ const App = () => {
               onMarkerSelect={handleMarkerSelect}
               isVisible={areMarkersVisible}
               isDefaultView={currentView === 'default'}
+              isWalkListPlaying={isWalkListPlaying}
+              mapCenterPoint={mapCenterPoint} // New prop
             />
             {renderCurrentView()}
           </div>
@@ -119,46 +255,3 @@ const App = () => {
 };
 
 export default App;
-
-//WalkListPlaying.js
-import React from 'react';
-import StopButton from '../common/StopButton.js';
-import PauseButton from '../common/PauseButtonPlay.js';
-
-const WalkListPlaying = ({onDonePlaying}) => {
-  return (
-    <div className="walklist-creator bg-gray-600 absolute bottom-0 left-0 right-0 z-50 flex justify-center items-center py-4" style={{ height: '200px' }}>
-      <div className="flex flex-col items-center mx-2">
-        <PauseButton />     
-      </div>
-      <div className="flex flex-col items-center mx-2">
-        <StopButton onClick={onDonePlaying}/>      
-      </div>
-    </div>
-  );
-};
-
-export default WalkListPlaying;
-
-//WalkListDetails.js
-import React from 'react';
-import PlayButton from '../common/PlayButton.js';
-
-const WalkListDetails = ({ title, songs = [] }) => {
-  console.log(title, songs)
-  return (
-    <div className="walklist-description bg-gray-600 slide-in-bottom absolute bottom-0 left-0 right-0 z-50 flex flex-col justify-center items-center py-4" style={{ height: 'auto', padding: '20px' }}>
-      {/* Display walklist name */}
-      <h2 className="text-white text-xl mb-4">{title}</h2>
-      <div>
-        {songs.map((song, index) => (
-          // Wrap each song in its own div
-          <div key={index} className="text-white mb-2">{song}</div>
-        ))}
-      </div>
-      <PlayButton />
-    </div>
-  );
-};
-
-export default WalkListDetails;

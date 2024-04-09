@@ -1,3 +1,4 @@
+//////
 //app.js
 import React, { useState, useEffect } from 'react';
 import SpotifyButton from './components/Login/SpotifyButton';
@@ -10,16 +11,19 @@ import SaveWalkList from './components/WalkListCreator/SaveWalkList';
 import WalkListDetails from './components/WalkListDetails/WalkListDetails';
 import WalkListPlaying from './components/WalkListDetails/WalkListPlaying';
 
-// Denne komponent er vores hovedkomponent
-// Den styrer hvilken del af applikationen der skal vises
+
 const App = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [showTopBarMessage, setShowTopBarMessage] = useState(true);
   const [topBarMessage, setTopBarMessage] = useState('Choose a walk-list');
   const [currentView, setCurrentView] = useState('default');
   const [areMarkersVisible, setAreMarkersVisible] = useState(true);
-  const [selectedSongs, setSelectedSongs] = useState([]); 
-  const [selectedTitle, setSelectedTitle] = useState(''); 
+  const [selectedSongs, setSelectedSongs] = useState([]);
+  const [selectedTitle, setSelectedTitle] = useState('');
+  const [isWalkListPlaying, setIsWalkListPlaying] = useState(false);
+  const [mapCenterPoint, setMapCenterPoint] = useState(null);
+  const [animationControl, setAnimationControl] = useState('resume');
+
 
   // Denne funktion håndtere login
   const handleLogin = () => {
@@ -33,11 +37,11 @@ const App = () => {
 
   const handleViewDetails = () => {
     setCurrentView('viewDetails');
-    setTopBarMessage('Viewing walk-list details'); 
+    setTopBarMessage('Viewing walk-list details');
   };
 
   const handleStartRecording = () => {
-    setCurrentView('recording'); 
+    setCurrentView('recording');
     setTopBarMessage('All of me | John Legend');
   };
 
@@ -45,36 +49,49 @@ const App = () => {
     setCurrentView('saveWalkList');
     setTopBarMessage('Save walk-list');
   }
-  // Denne funktion sender os tilbage til default view
+
   const handleReturnToDefault = () => {
     setCurrentView('default');
-    setTopBarMessage('Choose a walk-list'); 
-    setAreMarkersVisible(true); //Vis markørerne igen
-  }
-  // Denne funktion håndtere valg af walk-liste
-  // Den tager titlen og sangene fra walk-listen
-  const handleMarkerSelect = (title, songs) => {
+    setTopBarMessage('Choose a walk-list');
+    setAreMarkersVisible(true);
+    setIsWalkListPlaying(false); 
+  };
+
+  const handleMarkerSelect = (title, songs, trail) => {
+
+    if (trail && trail.length > 0) {
+      setMapCenterPoint(trail[0]);
+    }
     setSelectedTitle(title);
     setSelectedSongs(songs);
     setCurrentView('viewDetails');
-    setAreMarkersVisible(false); // Gem markørerne når en walk-liste er valgt
+    setAreMarkersVisible(false); 
   };
 
   const handlePlayWalkList = () => {
     setCurrentView('walkListPlaying');
-    setTopBarMessage('Playing walk-list'); 
+    setTopBarMessage('Playing walk-list');
+    setIsWalkListPlaying(true);
   };
 
 
-  // Denne useEffect bruger escape key press og sender os tilbage til default view
+  const handlePauseAnimation = () => {
+    setAnimationControl('pause');
+  };
+
+  const handleResumeAnimation = () => {
+    setAnimationControl('resume');
+  };
+
   useEffect(() => {
     const handleKeyDown = (event) => {
       if (event.key === 'Escape') {
         setCurrentView('default');
         setShowTopBarMessage(true);
-        setTopBarMessage('Choose a walk-list'); // Reset the top bar message to default
-        setSelectedSongs([]); // Clear selected songs
-        setAreMarkersVisible(true); // Show markers again
+        setTopBarMessage('Choose a walk-list'); 
+        setSelectedSongs([]); 
+        setAreMarkersVisible(true); 
+        setIsWalkListPlaying(false); 
       }
     };
 
@@ -97,8 +114,8 @@ const App = () => {
         return <Recording onDoneRecording={handleSaveWalkList} />;
       case 'saveWalkList':
         return <SaveWalkList onSaved={handleReturnToDefault} />;
-      case 'walkListPlaying':
-        return <WalkListPlaying onDonePlaying={handleReturnToDefault} />;
+        case 'walkListPlaying':
+          return <WalkListPlaying onDonePlaying={handleReturnToDefault} onResume={handleResumeAnimation} onPause={handlePauseAnimation} />;
       default:
         return <RoundedButton text="Create new walk-list" onClick={handleCreateWalkList} />;
     }
@@ -107,9 +124,6 @@ const App = () => {
   return (
     <div className="app flex flex-col h-screen overflow-hidden">
       {!isLoggedIn ? (
-        // Hvis brugeren ikke er logget ind vises login knappen
-        // Når brugeren er logget ind vises kortet og walk-listen
-        // MapView er en komponent der tager isVisible, onMarkerSelect og isDefaultView som props
         <SpotifyButton onLogin={handleLogin} />
       ) : (
         <>
@@ -119,6 +133,9 @@ const App = () => {
               onMarkerSelect={handleMarkerSelect}
               isVisible={areMarkersVisible}
               isDefaultView={currentView === 'default'}
+              isWalkListPlaying={isWalkListPlaying}
+              mapCenterPoint={mapCenterPoint} // New prop
+              animationControl={animationControl}
             />
             {renderCurrentView()}
           </div>
