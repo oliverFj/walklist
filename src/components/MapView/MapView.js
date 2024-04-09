@@ -1,18 +1,19 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { MapContainer, TileLayer, Polyline, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
-import CustomMarker from './CustomMarker'; // Assuming CustomMarker is correctly implemented.
-import markersData from './PlaceholderData'; // Static data for markers
+import CustomMarker from './CustomMarker'; 
+import markersData from './PlaceholderData'; 
 
-// A utility function to delay execution, already well defined.
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 
-
+//Denne funktion håndterer animationen af ruterne når de vælges.
+//Den flytter også kortets centrum over til den valgte markør.
+//Den burde have en pause funktion, men det var *beværligt*
 const MapAnimator = ({ center, trail, isWalkListPlaying, animationControl }) => {
   const map = useMap();
   const stopAnimation = useRef(false);
-  const currentFrameRef = useRef({ segment: 0, frame: 0 }); // Define currentFrameRef here
+  const currentFrameRef = useRef({ segment: 0, frame: 0 }); 
 
   useEffect(() => {
     const animateTrail = async () => {
@@ -67,7 +68,8 @@ const MapAnimator = ({ center, trail, isWalkListPlaying, animationControl }) => 
   return null;
 };
 
-
+// Denne funktion vælger hvad der skal vises på kortet.
+// Den henter den nødvendige data fra "databasen" og distrubuerer det til hvor det skal bruges.
 const MapView = ({ isVisible, onMarkerSelect, isDefaultView, isWalkListPlaying, mapCenterPoint, animationControl }) => {
   const [markers] = useState(markersData);
   const [visibleTrails, setVisibleTrails] = useState({});
@@ -83,7 +85,7 @@ const MapView = ({ isVisible, onMarkerSelect, isDefaultView, isWalkListPlaying, 
   const handleMarkerClick = (title, songs, trail) => {
     onMarkerSelect(title, songs, trail);
     toggleTrailVisibility(title);
-    setSelectedTrail(trail); // Consider ensuring this triggers animation start.
+    setSelectedTrail(trail); 
   };
 
   const toggleTrailVisibility = (title) => {

@@ -12,6 +12,8 @@ import WalkListDetails from './components/WalkListDetails/WalkListDetails';
 import WalkListPlaying from './components/WalkListDetails/WalkListPlaying';
 
 
+// Denne funktion styrer hvilken dele af applikationen der skal vises
+// Delene er diverse komponenter der bliver loaded ind efter behov.
 const App = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [showTopBarMessage, setShowTopBarMessage] = useState(true);
@@ -25,11 +27,11 @@ const App = () => {
   const [animationControl, setAnimationControl] = useState('resume');
 
 
-  // Denne funktion håndtere login
+  // Denne funktion åbner login komponenten (hvis der var en forbindelse til spotifys api)
   const handleLogin = () => {
     setIsLoggedIn(true);
   };
-  // Denne funktion håndtere oprettelse af walk-liste 
+  // Denne funktion åbner komponenten til oprettelse af walk-lister
   const handleCreateWalkList = () => {
     setCurrentView('createWalkList');
     setTopBarMessage('New walk-list'); // Her opdateres topbar beskeden
@@ -40,6 +42,7 @@ const App = () => {
     setTopBarMessage('Viewing walk-list details');
   };
 
+  // Denne funktion åbner komponenten der indeholder optageknappen.
   const handleStartRecording = () => {
     setCurrentView('recording');
     setTopBarMessage('All of me | John Legend');
@@ -57,6 +60,9 @@ const App = () => {
     setIsWalkListPlaying(false); 
   };
 
+ // Her har jeg en komponent der håndterer markørerne.
+ // Hvert element i markørlisten bliver automatisk placeret på kortet ud fra deres start koordinater.
+ // Den tager elementer som titlen og sangene fra walk-listen samt ruten som er en array af koordinater.
   const handleMarkerSelect = (title, songs, trail) => {
 
     if (trail && trail.length > 0) {
@@ -74,7 +80,7 @@ const App = () => {
     setIsWalkListPlaying(true);
   };
 
-
+  // TODO: Det her virker ikke korrekt.
   const handlePauseAnimation = () => {
     setAnimationControl('pause');
   };
@@ -83,6 +89,7 @@ const App = () => {
     setAnimationControl('resume');
   };
 
+  // esc knappen vender tilbage til default view.
   useEffect(() => {
     const handleKeyDown = (event) => {
       if (event.key === 'Escape') {
@@ -104,6 +111,7 @@ const App = () => {
 
 
   // Denne funktion styrer hvilken del af applikationen der skal vises
+  // og hvilke interaktive elementer (knapper) der er adgang til.
   const renderCurrentView = () => {
     switch (currentView) {
       case 'createWalkList':
@@ -129,12 +137,14 @@ const App = () => {
         <>
           {showTopBarMessage && <TopBarMessage text={topBarMessage} />}
           <div className="flex-grow relative z-10">
+            {/* Her bliver Mapview loaded. Det gør den seperat fra andre componenter, sådan at 
+            den ikke skal reloades hver gang et komponent skiftes ud. */}
             <MapView
               onMarkerSelect={handleMarkerSelect}
               isVisible={areMarkersVisible}
               isDefaultView={currentView === 'default'}
               isWalkListPlaying={isWalkListPlaying}
-              mapCenterPoint={mapCenterPoint} // New prop
+              mapCenterPoint={mapCenterPoint}
               animationControl={animationControl}
             />
             {renderCurrentView()}
